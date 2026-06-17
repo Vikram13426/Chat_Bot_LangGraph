@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+.env/
+
+# Environment Variables
+.env
+
+# VS Code
+.vscode/
+
+# LangGraph
+.langgraph_api/
+
+# Python Build Files
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Testing
+.pytest_cache/
+
+# Coverage
+.coverage
+htmlcov/
