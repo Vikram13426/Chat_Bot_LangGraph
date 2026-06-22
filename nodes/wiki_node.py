@@ -1,18 +1,9 @@
-from tools.wiki_tool import (
-    get_wiki_summary
-)
-
-
 def wiki_node(state):
 
-    params = state["tool_input"]
-
-    topic = params["topic"]
-
-    result = get_wiki_summary(topic)
-    print("\n===== WIKI RESULT =====")
-    print(result)
+    print("Wiki Node Executed")
 
     return {
-        "tool_result": result
+        "tool_result": {
+            "tool": "wiki"
+        }
     }
