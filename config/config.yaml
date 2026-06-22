@@ -1,0 +1,14 @@
+name: Simple tool based chatbot 
+
+Metadata:
+  version: 1.0
+  created_on: 2026-06-19
+  maintainers: 
+    - Vikram
+    - Pooja
+    - Santhosh
+
+Apis:
+  currency_exchange: "/currency-exchange"
+  weather: "/weather"
+  
