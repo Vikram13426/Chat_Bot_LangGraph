@@ -1,24 +1,32 @@
 from services.llm_service import llm
+
+from schemas.router_schema import RouterOutput
+
 from prompts.router_prompt import ROUTER_PROMPT
+
+
+structured_llm = llm.with_structured_output(
+    RouterOutput
+)
 
 
 def router_node(state):
 
-    user_query = state["user_query"]
+    query = state["user_query"]
 
     prompt = f"""
     {ROUTER_PROMPT}
 
-    Question:
-    {user_query}
+    User Query:
+    {query}
     """
 
-    response = llm.invoke(prompt)
+    result = structured_llm.invoke(prompt)
 
-    route = response.content.strip().lower()
-
-    print(f"Selected Route: {route}")
+    print("\n===== ROUTER OUTPUT =====")
+    print(result)
 
     return {
-        "route": route
+        "route": result.route,
+        "tool_input": result.tool_input
     }

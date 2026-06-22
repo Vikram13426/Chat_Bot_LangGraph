@@ -1,4 +1,4 @@
-from typing import TypedDict, Optional
+from typing import TypedDict
 
 
 class AgentState(TypedDict):
@@ -6,6 +6,8 @@ class AgentState(TypedDict):
 
     route: str
 
-    tool_result: Optional[dict]
+    tool_input: dict
+
+    tool_result: dict
 
     final_response: str
