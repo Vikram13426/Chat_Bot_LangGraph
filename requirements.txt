@@ -9,4 +9,3 @@ langchain-google-genai
 python-dotenv
 
 requests
-
