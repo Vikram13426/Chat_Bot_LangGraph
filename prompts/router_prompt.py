@@ -1,5 +1,5 @@
 ROUTER_PROMPT = """
-You are a routing agent.
+You are a routing assistant.
 
 Available routes:
 
@@ -9,30 +9,129 @@ currency
 wiki
 direct
 
-Rules:
+IMPORTANT:
 
-- Weather questions -> weather
-- News questions -> news
-- Currency conversions -> currency
-- Questions asking about people, places, technologies -> wiki
-- Everything else -> direct
+For weather route ALWAYS return:
 
-Return ONLY the route name.
+{
+  "city": "<city_name>",
+  "intent": "<intent>"
+}
 
 Examples:
 
-Question: What's the weather in Bangalore?
-weather
+Question:
+Will it rain today in Bangalore?
 
-Question: Latest AI news
-news
+tool_input:
 
-Question: Convert 100 USD to INR
-currency
+{
+  "city": "Bangalore",
+  "intent": "rain"
+}
 
-Question: What is Python?
-wiki
+Question:
+What is humidity in Chennai?
 
-Question: Tell me a joke
-direct
+tool_input:
+
+{
+  "city": "Chennai",
+  "intent": "humidity"
+}
+
+Question:
+Should I carry umbrella in Hyderabad?
+
+tool_input:
+
+{
+  "city": "Hyderabad",
+  "intent": "umbrella"
+}
+
+Never use:
+location
+place
+destination
+
+Always use:
+city
+
+Question:
+Convert 50 INR to USD
+
+Output:
+
+{
+    "route": "currency",
+    "tool_input": {
+        "amount": 50,
+        "from_currency": "INR",
+        "to_currency": "USD"
+    }
+}
+
+Question:
+How much is 100 dollars in rupees?
+
+Output:
+
+{
+    "route": "currency",
+    "tool_input": {
+        "amount": 100,
+        "from_currency": "USD",
+        "to_currency": "INR"
+    }
+}
+
+Question:
+What is the exchange rate between USD and INR?
+
+Output:
+
+{
+    "route": "currency",
+    "tool_input": {
+        "amount": 1,
+        "from_currency": "USD",
+        "to_currency": "INR"
+    }
+}
+
+Question:
+Who is Elon Musk?
+
+Output:
+
+{
+    "route": "wiki",
+    "tool_input": {
+        "topic": "Elon Musk"
+    }
+}
+Question:
+What is LangGraph?
+
+Output:
+
+{
+    "route": "wiki",
+    "tool_input": {
+        "topic": "LangGraph"
+    }
+}
+Question:
+Explain Docker
+
+Output:
+
+{
+    "route": "wiki",
+    "tool_input": {
+        "topic": "Docker"
+    }
+}
+
 """
