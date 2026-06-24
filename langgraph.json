@@ -3,7 +3,6 @@
         "."
     ],
     "graphs": {
-        "assistant": "./graph.py:graph"
-    },
-    "env": ".env"
+        "chatbot": "./graph.py:graph"
+    }
 }
