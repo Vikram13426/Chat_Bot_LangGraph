@@ -86,35 +86,78 @@ def weather(city: str) -> dict:
 # CURRENCY TOOL
 # ==========================================================
 
+from langchain_core.tools import tool
+import requests
+import os
+
+
 @tool
-def currency_exchange(
+def currency(
     from_currency: str,
-    to_currency: str
+    to_currency: str,
+    amount: float = 1
 ) -> dict:
     """
-    Get currency exchange rate.
+    Convert currencies and retrieve live exchange rates.
+
+    Use this tool when users ask about:
+
+    - Currency conversion
+    - Exchange rates
+    - Forex rates
+    - Dollar rate
+    - Euro rate
+    - Yen rate
+    - Currency comparison
+
+    Examples:
+
+    - Convert 100 USD to INR
+    - USD to INR rate
+    - Current EUR to USD rate
+    - How much is 500 GBP in INR?
+
+    Returns live exchange rate data.
     """
 
-    url = (
-        f"{config['apis']['currency_exchange']['base_url']}"
-        f"/{from_currency.upper()}"
-    )
+    api_key = os.getenv("EXCHANGE_RATE_API_KEY")
 
-    response = requests.get(
-        url,
-        timeout=15
-    )
+    url = f"https://v6.exchangerate-api.com/v6/{api_key}/latest/{from_currency.upper()}"
+
+    response = requests.get(url, timeout=15)
 
     response.raise_for_status()
 
     data = response.json()
 
-    rate = data["rates"][to_currency.upper()]
+    if data["result"] != "success":
+        return {
+            "error": "Unable to retrieve exchange rates."
+        }
+
+    rate = data["conversion_rates"].get(
+        to_currency.upper()
+    )
+
+    if not rate:
+        return {
+            "error": f"Unsupported currency: {to_currency}"
+        }
+
+    converted_amount = round(
+        amount * rate,
+        2
+    )
 
     return {
         "from_currency": from_currency.upper(),
         "to_currency": to_currency.upper(),
-        "exchange_rate": rate
+        "amount": amount,
+        "exchange_rate": rate,
+        "converted_amount": converted_amount,
+        "last_updated": data.get(
+            "time_last_update_utc"
+        )
     }
 
 
@@ -122,81 +165,277 @@ def currency_exchange(
 # NEWS TOOL
 # ==========================================================
 
+
+
+
+CATEGORY_MAP = {
+    "technology": "technology",
+    "sports": "sports",
+    "business": "business",
+    "science": "science",
+    "health": "health",
+    "entertainment": "entertainment",
+}
+
+COUNTRY_MAP = {
+    "america": "us",
+    "usa": "us",
+    "united states": "us",
+    "india": "in",
+    "japan": "jp",
+    "china": "cn",
+    "canada": "ca",
+    "australia": "au",
+    "uk": "gb",
+    "united kingdom": "gb",
+}
+
+
 @tool
-def news(topic: str) -> dict:
+def news(query: str = "latest news") -> dict:
     """
-    Get latest news about a topic.
+    Get latest news.
+
+    Supports:
+    - General headlines
+    - Category news
+    - Country news
+    - Topic specific news
+
+    Examples:
+    - latest news
+    - technology news
+    - sports news
+    - news in india
+    - OpenAI news
+    - Tesla news
     """
 
     api_key = os.getenv("NEWS_API_KEY")
 
-    url = config["apis"]["news"]["base_url"]
+    if not api_key:
+        return {"error": "NEWS_API_KEY not configured"}
 
-    response = requests.get(
-        url,
-        params={
-            "q": topic,
-            "apiKey": api_key,
-            "pageSize": 5
-        },
-        timeout=15
-    )
+    query_lower = query.lower().strip()
+
+    articles = []
+
+    # --------------------------------------------------
+    # CATEGORY NEWS
+    # --------------------------------------------------
+
+    if query_lower in CATEGORY_MAP:
+
+        response = requests.get(
+            "https://newsapi.org/v2/top-headlines",
+            params={
+                "category": CATEGORY_MAP[query_lower],
+                "language": "en",
+                "pageSize": 5,
+                "apiKey": api_key
+            },
+            timeout=15
+        )
+
+        mode = "category"
+
+    # --------------------------------------------------
+    # COUNTRY NEWS
+    # --------------------------------------------------
+
+    elif query_lower in COUNTRY_MAP:
+
+        response = requests.get(
+            "https://newsapi.org/v2/top-headlines",
+            params={
+                "country": COUNTRY_MAP[query_lower],
+                "pageSize": 5,
+                "apiKey": api_key
+            },
+            timeout=15
+        )
+
+        mode = "country"
+
+    # --------------------------------------------------
+    # GENERAL HEADLINES
+    # --------------------------------------------------
+
+    elif query_lower in [
+        "latest news",
+        "breaking news",
+        "today news",
+        "today's news",
+        "current news"
+    ]:
+
+        response = requests.get(
+            "https://newsapi.org/v2/top-headlines",
+            params={
+                "language": "en",
+                "pageSize": 5,
+                "apiKey": api_key
+            },
+            timeout=15
+        )
+
+        mode = "headlines"
+
+    # --------------------------------------------------
+    # TOPIC SEARCH
+    # --------------------------------------------------
+
+    else:
+
+        response = requests.get(
+            "https://newsapi.org/v2/everything",
+            params={
+                "q": query,
+                "language": "en",
+                "sortBy": "publishedAt",
+                "pageSize": 5,
+                "apiKey": api_key
+            },
+            timeout=15
+        )
+
+        mode = "topic"
 
     response.raise_for_status()
 
     data = response.json()
 
-    articles = []
+    for article in data.get("articles", []):
 
-    for article in data.get("articles", [])[:5]:
-
-        articles.append(
-            {
-                "title": article["title"],
-                "source": article["source"]["name"],
-                "url": article["url"]
-            }
-        )
+        articles.append({
+            "title": article.get("title"),
+            "source": article.get("source", {}).get("name"),
+            "published_at": article.get("publishedAt"),
+            "description": article.get("description"),
+            "url": article.get("url")
+        })
 
     return {
-        "topic": topic,
+        "mode": mode,
+        "query": query,
+        "article_count": len(articles),
         "articles": articles
     }
-
-
 # ==========================================================
 # WIKIPEDIA TOOL
 # ==========================================================
 
+from langchain_core.tools import tool
+import requests
+
+
 @tool
-def wikipedia(topic: str) -> dict:
+def wiki(topic: str) -> dict:
     """
-    Search Wikipedia and return a summary.
+    Retrieve encyclopedic information from Wikipedia.
+
+    Use this tool when users ask about:
+
+    - What is X?
+    - Who is X?
+    - Tell me about X
+    - Explain X
+    - History of X
+    - Information about a country
+    - Information about a person
+    - Information about a company
+    - Information about a technology
+    - General knowledge topics
+
+    Returns a concise encyclopedia-style summary.
     """
 
-    url = (
-        f"{config['apis']['wikipedia']['base_url']}"
-        f"/{topic}"
-    )
+    try:
 
-    response = requests.get(
-        url,
-        timeout=15
-    )
+        url = "https://en.wikipedia.org/w/api.php"
 
-    response.raise_for_status()
+        headers = {
+            "User-Agent": "AgenticAIAssistant/1.0"
+        }
 
-    data = response.json()
+        response = requests.get(
+            url,
+            params={
+                "action": "query",
+                "format": "json",
+                "prop": "extracts",
+                "titles": topic,
+                "exintro": True,
+                "explaintext": True,
+                "redirects": 1
+            },
+            headers=headers,
+            timeout=15
+        )
 
-    return {
-        "title": data.get("title"),
-        "summary": data.get("extract")
-    }
+        response.raise_for_status()
 
+        data = response.json()
 
+        pages = data.get("query", {}).get("pages", {})
+
+        if not pages:
+            return {
+                "topic": topic,
+                "error": "No information found."
+            }
+
+        page = next(iter(pages.values()))
+
+        if "missing" in page:
+            return {
+                "topic": topic,
+                "error": f"No Wikipedia article found for '{topic}'."
+            }
+
+        title = page.get("title", topic)
+
+        summary = page.get(
+            "extract",
+            "No summary available."
+        )
+
+        page_url = (
+            "https://en.wikipedia.org/wiki/"
+            + title.replace(" ", "_")
+        )
+
+        return {
+            "topic": topic,
+            "title": title,
+            "summary": summary,
+            "url": page_url
+        }
+
+    except requests.exceptions.Timeout:
+
+        return {
+            "topic": topic,
+            "error": "Wikipedia request timed out."
+        }
+
+    except requests.exceptions.RequestException as e:
+
+        return {
+            "topic": topic,
+            "error": str(e)
+        }
+
+    except Exception as e:
+
+        return {
+            "topic": topic,
+            "error": str(e)
+        }
+        
 TOOLS = [
     weather,
-    currency_exchange,
+    currency,
     news,
-    wikipedia
+    wiki
 ]
