@@ -86,9 +86,7 @@ def weather(city: str) -> dict:
 # CURRENCY TOOL
 # ==========================================================
 
-from langchain_core.tools import tool
-import requests
-import os
+
 
 
 @tool
@@ -325,8 +323,7 @@ def news(query: str = "latest news") -> dict:
 # WIKIPEDIA TOOL
 # ==========================================================
 
-from langchain_core.tools import tool
-import requests
+
 
 
 @tool
