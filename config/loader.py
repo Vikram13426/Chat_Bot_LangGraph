@@ -1,13 +1,18 @@
 import yaml
 from pathlib import Path
 
-CONFIG_PATH = Path("config/parameters.yaml")
+CONFIG_PATH = Path("config/config.yaml")
+
 
 def load_config() -> dict:
-    """Load parameter configuration from YAML file"""
+    """
+    Load project configuration from YAML file.
+    """
     try:
-        with open(CONFIG_PATH, 'r') as f:
-            return yaml.safe_load(f)
+        with open(CONFIG_PATH, "r", encoding="utf-8") as file:
+            return yaml.safe_load(file)
+
     except FileNotFoundError:
-        print(f"⚠️ Config file not found at {CONFIG_PATH}")
-        return {}
+        raise FileNotFoundError(
+            f"Configuration file not found: {CONFIG_PATH}"
+        )

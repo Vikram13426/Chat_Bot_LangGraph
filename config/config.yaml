@@ -1,14 +1,33 @@
-name: Simple tool based chatbot 
+name: Simple Tool Based Chatbot
 
-Metadata:
+metadata:
   version: 1.0
   created_on: 2026-06-19
-  maintainers: 
+
+  maintainers:
     - Vikram
     - Pooja
     - Santhosh
 
-Apis:
-  currency_exchange: "/currency-exchange"
-  weather: "/weather"
-  
+llm:
+  model: gemini-2.5-flash
+  temperature: 0
+
+tools:
+  weather: true
+  currency_exchange: true
+  news: true
+  wikipedia: true
+
+apis:
+  weather:
+    base_url: "https://api.openweathermap.org/data/2.5/forecast"
+
+  currency_exchange:
+    base_url: "https://open.er-api.com/v6/latest"
+
+  news:
+    base_url: "https://newsapi.org/v2/everything"
+
+  wikipedia:
+    base_url: "https://en.wikipedia.org/api/rest_v1/page/summary"
