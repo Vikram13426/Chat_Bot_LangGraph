@@ -181,6 +181,9 @@ def wikipedia(topic: str) -> dict:
 
     response = requests.get(
         url,
+        headers={
+            "User-Agent": "LangGraphBot/1.0"
+        },
         timeout=15
     )
 
